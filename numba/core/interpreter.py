@@ -370,6 +370,7 @@ class Interpreter(object):
         self.scopes.append(ir.Scope(parent=self.current_scope, loc=self.loc))
         # Interpret loop
         for inst, kws in self._iter_inst():
+            print('inst: ', inst, '    kws: ', kws)
             self._dispatch(inst, kws)
         self._legalize_exception_vars()
         # Prepare FunctionIR
@@ -668,8 +669,10 @@ class Interpreter(object):
     def _dispatch(self, inst, kws):
         assert self.current_block is not None
         fname = "op_%s" % inst.opname.replace('+', '_')
+        print('fname: ', fname)
         try:
             fn = getattr(self, fname)
+            print('fn: ', fn)
         except AttributeError:
             raise NotImplementedError(inst)
         else:
@@ -1054,6 +1057,7 @@ class Interpreter(object):
         self.current_block.append(sa)
 
     def op_LOAD_ATTR(self, inst, item, res):
+        print("-------op_LOAD_ATTR---------")
         item = self.get(item)
         attr = self.code_names[inst.arg]
         getattr = ir.Expr.getattr(item, attr, loc=self.loc)
