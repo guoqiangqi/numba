@@ -644,30 +644,6 @@ def _infer_dtype_from_inputs(inputs):
     return dtype
 
 
-@glue_typing(np.linspace)
-class NdLinspace(AbstractTemplate):
-
-    def generic(self, args, kws):
-        assert not kws
-        bounds = args[:2]
-        if not all(isinstance(arg, types.Number) for arg in bounds):
-            return
-        if len(args) >= 3:
-            num = args[2]
-            if not isinstance(num, types.Integer):
-                return
-        if len(args) >= 4:
-            # Not supporting the other arguments as it would require
-            # keyword arguments for reasonable use.
-            return
-        if any(isinstance(arg, types.Complex) for arg in bounds):
-            dtype = types.complex128
-        else:
-            dtype = types.float64
-        return_type = types.Array(ndim=1, dtype=dtype, layout='C')
-        return signature(return_type, *args)
-
-
 @glue_typing(np.frombuffer)
 class NdFromBuffer(CallableTemplate):
 

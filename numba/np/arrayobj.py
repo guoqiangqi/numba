@@ -4062,37 +4062,38 @@ def np_arange(start, stop=None, step=None, dtype=None):
     return impl
 
 
-@glue_lowering(np.linspace, types.Number, types.Number)
-def numpy_linspace_2(context, builder, sig, args):
+@overload(np.linspace)
+def numpy_linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=0):
+    
+    def impl(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=0):
+        if num < 0: 
+            raise ValueError("Number of samples mut be non-negative.")
 
-    def linspace(start, stop):
-        return np.linspace(start, stop, 50)
-
-    res = context.compile_internal(builder, linspace, sig, args)
-    return impl_ret_new_ref(context, builder, sig.return_type, res)
-
-
-@glue_lowering(np.linspace, types.Number, types.Number, types.Integer)
-def numpy_linspace_3(context, builder, sig, args):
-    dtype = as_dtype(sig.return_type.dtype)
-
-    # Implementation based on https://github.com/numpy/numpy/blob/v1.20.0/numpy/core/function_base.py#L24 # noqa: E501
-    def linspace(start, stop, num):
-        arr = np.empty(num, dtype)
-        if num == 0:
-            return arr
-        div = num - 1
+        arr = np.empty(num)
+        # if num == 0:
+        #     return arr
+        div = num - 1 if endpoint else num
         if div > 0:
             delta = stop - start
             step = delta / div
             for i in range(0, num):
                 arr[i] = start + (i * step)
         else:
+            step = np.NaN
             arr[0] = start
-        return arr
 
-    res = context.compile_internal(builder, linspace, sig, args)
-    return impl_ret_new_ref(context, builder, sig.return_type, res)
+        # if axis != 0:
+        #     arr = np.moveaxis(arr, 0, axis)
+
+        # if dtype:
+        #     arr = arr.astype(dtype)
+
+        if retstep:
+            return arr
+        else:
+            return arr
+
+    return impl        
 
 
 def _array_copy(context, builder, sig, args):
